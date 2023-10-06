@@ -33,7 +33,7 @@ const AdxIframe = () => {
       if (path && path !== "") {
         sessionStorage.setItem("organizationPath", path);
       }
-      const uriD = `https://dataexplorer.azure.com/dashboards/c9466950-8367-4a4c-84a4-e52a5d847869?p-_startTime=180days&p-_endTime=now&p-_org=v-${path}&p-_devices=all&p-_state=all&p-_username=v-${sessionStorage.getItem(
+      const uriD = `https://dataexplorer.azure.com/dashboards/32007347-c45d-4115-bba4-8d610ccec32c?p-_startTime=1hours&p-_endTime=now&p-_deviceId=all&p-_commodityCode=all&p-_tag=all&p-_opState=all#f37defc3-8ea7-4a11-8926-29761452b4e2p-_org=v-${path}&p-_devices=all&p-_state=all&p-_username=v-${sessionStorage.getItem(
         "username"
       )}&p-_adt=v-${instance}&f-IFrameAuth=true&f-PersistAfterEachRun=true&f-Homepage=false&f-ShowPageHeader=false&f-ShowNavigation=false&f-DisableExploreQuery=false&f-DisableDashboardTopBar=true`;
       setUri(uriD);
