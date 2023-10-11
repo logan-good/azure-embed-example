@@ -1,116 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADX Iframe Embedding</title>
-    <!-- Include React Library -->
-    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-    <!-- Include Babel to transpile JSX -->
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-</head>
-<body>
+<div style="height: 80vh;" id="embedContainer"></div>
 
-<div id="root"></div>
+ <%    PowerBIWebAPI bi = new PowerBIWebAPI();
+                        String report_id = "b96259f1-8a2f-4d7c-a41f-0a7d951bb7f1";  //with sn param
+                        String dataset_id = "57fba225-88a9-45cd-bbe0-edec0d3282df"; //with sn param
+                        String workspace_id = "9c65faea-1c4d-42d8-9d61-a39e06f27de0";
 
-<script type="text/babel">
-    import React, { useEffect, useState } from "react";
-    import { useToken } from "../../../api/auth";
-    import AppLoader from "../../../layouts/loading/AppLoader";
-    import { useMsal } from "@azure/msal-react";
-    import { useQuery } from "../../../api/query";
-    import { endpoints } from "../../../api/authConfig";
+                        //Check to switch to dev report
+                        String server_name = request.getServerName();
+                        if (!server_name.equals(www.hypertherm.com) && !server_name.equals("xnet.hypertherm.com")) {
+                            report_id = "c3585c90-c6b1-4f3a-b59c-e40d617025f3";
+                            dataset_id = "be69edcb-c83a-4a37-9f88-4a9dd245d465";
+                            workspace_id = "d8216e9e-35b8-478c-be30-5047fd9bb7ac";
+                        }
 
-    const AdxIframe = () => {
-        const [loading, setLoading] = useState(true);
-        const [uri, setUri] = useState("");
-        const { instance, accounts } = useMsal();
-        const username = sessionStorage.getItem("username");
-        const organizationPathQuery = useQuery(
-            endpoints[0],
-            `GetOrganizationPath_devV1('${username}', #)`
-        );
+                        String identities = " 'identities':["
+                                + "  { "
+                                + "   'username': '80df792d-18c1-4c99-bcbf-ee1486473626',"
+                                + "   'roles': [ "
+                                + "      'customer' "
+                                + "    ], "
+                                + "   'customData': '" + sn + "',"
+                                + "   'datasets': ["
+                                + "     '" + dataset_id + "'   "
+                                + "    ]"
+                                + "  } "
+                                + "  ],";
 
-        function mapScope(scope) {
-            switch (scope) {
-                case "query":
-                    return ["https://dvmesholyteladx.eastus.kusto.windows.net/.default"];
-                case "People.Read":
-                    return ["People.Read", "User.ReadBasic.All", "Group.Read.All"];
-                default:
-                    return [scope];
+                        bi.generatePowerBIToken(dataset_id, report_id, identities);
+
+                        bi.generatePowerBIEmbedLink(workspace_id, report_id);
+
+
+                    %>
+                                                                        
+                                                                        
+                                                                        
+                                                                        
+                                                                        
+                                                                        
+                                                                        <script type="module">
+            //alert('here');
+            let loadedResolve, reportLoaded = new Promise((res, rej) => { loadedResolve = res; });
+            let renderedResolve, reportRendered = new Promise((res, rej) => { renderedResolve = res; });
+
+            // Get models. models contains enums that can be used.
+            var models = window['powerbi-client'].models;
+
+
+            //import { embedreport } from './scripts/embedreport.js';
+
+            // Embed a Power BI report in the given HTML element with the given configurations
+            // Read more about how to embed a Power BI report in your application here: https://go.microsoft.com/fwlink/?linkid=2153590
+            function embedPowerBIReport(accessToken, embedUrl, embedReportId) {
+            /*-----------------------------------------------------------------------------------+
+            |    Don't change these values here: access token, embed URL and report ID.          |
+            |    To make changes to these values:                                                |
+            |    1. Save any other code changes to a text editor, as these will be lost.         |
+            |    2. Select 'Start over' from the ribbon.                                         |
+            |    3. Select a report or use an embed token.                                       |
+            +-----------------------------------------------------------------------------------*/
+
+            // Read embed type from radio
+            let tokenType = models.TokenType.Embed;
+
+            // We give All permissions to demonstrate switching between View and Edit mode and saving report.
+            let permissions = models.Permissions.All;
+
+            // Create the embed configuration object for the report
+            // For more information see https://go.microsoft.com/fwlink/?linkid=2153590
+            let config = {
+            type: 'report',
+            tokenType: tokenType == '0' ? models.TokenType.Aad : models.TokenType.Embed,
+            accessToken: accessToken,
+            embedUrl: embedUrl,
+            id: embedReportId,
+            permissions: permissions,
+            settings: {
+            panes: {
+            filters: {
+            visible: true
+            },
+            pageNavigation: {
+            visible: true
             }
-        }
+            }
+            }
+            };
 
-        useEffect(() => {
-            organizationPathQuery().then((jsonData) => {
-                const path = jsonData[0].path;
-                const instance = jsonData[0].instance;
-                if (path && path !== "") {
-                    sessionStorage.setItem("organizationPath", path);
-                }
-                const uriD = `https://dataexplorer.azure.com/dashboards/c9466950-8367-4a4c-84a4-e52a5d847869?p-_startTime=180days&p-_endTime=now&p-_org=v-${path}&p-_devices=all&p-_state=all&p-_username=v-${sessionStorage.getItem(
-                    "username"
-                )}&p-_adt=v-${instance}&f-IFrameAuth=true&f-PersistAfterEachRun=true&f-Homepage=false&f-ShowPageHeader=false&f-ShowNavigation=false&f-DisableExploreQuery=false&f-DisableDashboardTopBar=true`;
-                setUri(uriD);
-                setLoading(false);
+            // Get a reference to the embedded report HTML element
+            let embedContainer = $('#embedContainer')[0];
+
+            // Embed the report and display it within the div container.
+            let report = powerbi.embed(embedContainer, config);
+
+            // report.off removes all event handlers for a specific event
+            report.off("loaded");
+
+            // report.on will add an event handler
+            report.on("loaded", function () {
+            loadedResolve();
+            report.off("loaded");
             });
-        }, []);
 
-        useEffect(() => {
-            const handleMessage = async (event) => {
-                if (
-                    event.data.signature === "queryExplorer" &&
-                    event.data.type === "getToken"
-                ) {
-                    instance
-                        .acquireTokenSilent({
-                            scopes: mapScope(event.data.scope),
-                            account: accounts[0],
-                        })
-                        .then((response) => {
-                            let accessToken = response.accessToken;
-                            event.source.postMessage(
-                                {
-                                    type: "postToken",
-                                    message: accessToken,
-                                    scope: event.data.scope,
-                                },
-                                event.origin
-                            );
-                        });
-                }
-            };
+            // report.off removes all event handlers for a specific event
+            report.off("error");
 
-            window.addEventListener("message", handleMessage, false);
+            report.on("error", function (event) {
+            console.log(event.detail);
+            });
 
-            return () => {
-                window.removeEventListener("message", handleMessage);
-            };
-        }, []);
+            // report.off removes all event handlers for a specific event
+            report.off("rendered");
 
-        return (
-            <>
-                {loading ? (
-                    <AppLoader />
-                ) : (
-                    <iframe
-                        width="99%"
-                        height="1000"
-                        src={uri}
-                        title="Analytics"
-                        allowFullScreen
-                    ></iframe>
-                )}
-            </>
-        );
-    };
+            // report.on will add an event handler
+            report.on("rendered", function () {
+            renderedResolve();
+            report.off("rendered");
+            });
+            }
 
-    export default AdxIframe;
+            async function embedreport (accessToken, embedUrl, embedReportId)   {
 
-    ReactDOM.render(<AdxIframe />, document.getElementById('root'));
-</script>
+            embedPowerBIReport(accessToken, embedUrl, embedReportId);
 
-</body>
-</html>
+            await reportLoaded;
+
+            // Insert here the code you want to run after the report is loaded
+
+            //await reportRendered;
+
+            // Insert here the code you want to run after the report is rendered
+
+
+            }
+            // Read embed application token
+            let accessToken = "<%= bi.getPowerBIReportToken()%>"; //Report token
+
+            // Read embed URL
+            let embedUrl = "<%= bi.getPowerBIWebUrl()%>";
+
+            // Read report Id
+            let embedReportId = "<%= report_id%>";
+
+            //embedPowerBIReport(accessToken, embedUrl, embedReportId);
+            embedreport(accessToken, embedUrl, embedReportId);
+
+        </script>
